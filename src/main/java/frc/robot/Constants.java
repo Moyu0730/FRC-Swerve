@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -16,12 +17,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  // Voltage compensation
-  public static final double kVoltageCompensation = 12.0;
-
   public static class JoystickConstants {
     public static final int kDriverControllerPort = 0;
-    public static final int kOperatorControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
 
     public static final int leftStick_X = 0;
     public static final int leftStick_Y = 1;
@@ -37,76 +35,70 @@ public final class Constants {
     public static final int btn_RB = 6;
     public static final int btn_LS = 9;  
     public static final int btn_RS = 10;
+
+    public static final double kDeadband = 0.05;
+  }
+
+  public static final class ModuleConstants {
+    // Adjust Here
+      public static final double kWheelDiameterMeters = 0.1034;
+      public static final double kThrottleGearRatio = 2.6470588;
+      public static final double kRotorGearRatio = 150/7;
+      public static final double kThrottleEncoderRot2Meter = kThrottleGearRatio * Math.PI * kWheelDiameterMeters;
+      public static final double kRotorEncoderRot2Rad = kRotorGearRatio * 2 * Math.PI;
+      public static final double kThrottleEncoderRPM2MeterPerSec = kThrottleEncoderRot2Meter / 60;
+      public static final double kRotorEncoderRPM2RadPerSec = kRotorEncoderRot2Rad / 60;
+      public static final double kPTurning = 0.009;
   }
 
   public static class MotorConstants {
+    // Distance between right and left wheels
+    public static final double kTrackWidthInMeter = 0.288798;
+    // Distance between front and back wheels
+    public static final double kWheelBaseInMeter = 0.288798;
 
-    // Rotor IDs
-      public static final int kLeftFrontRotorID = 0;
-      public static final int kRightFrontRotorID = 0;
-      public static final int kLeftRearRotorID = 0;
-      public static final int kRightRearRotorID = 0;
+    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+      new Translation2d( kWheelBaseInMeter, -kTrackWidthInMeter ),
+      new Translation2d( kWheelBaseInMeter, kTrackWidthInMeter ),
+      new Translation2d( -kWheelBaseInMeter, -kTrackWidthInMeter ),
+      new Translation2d( -kWheelBaseInMeter, kTrackWidthInMeter ));
 
-    // Throttle IDs
-      public static final int kLeftFrontThrottleID = 0;
-      public static final int kRightFrontThrottleID = 0;
-      public static final int kLeftRearThrottleID = 0;
-      public static final int kRightRearThrottleID = 0;
-    
-    // Rotor Encoder IDs
-      public static final int kLeftFrontRotorEncoderID = 0;
-      public static final int kRightFrontRotorEncoderID = 0;
-      public static final int kLeftRearRotorEncoderID = 0;
-      public static final int kRightRearRotorEncoderID = 0;
+    public static final double kPhysicalMaxSpeedMetersPerSecond = 5;
 
-    // Throttle Encoder IDs
-      public static final int kLeftFrontThrottleEncoderID = 0;
-      public static final int kRightFrontThrottleEncoderID = 0;
-      public static final int kLeftRearThrottleEncoderID = 0;
-      public static final int kRightRearThrottleEncoderID = 0;
+    public static final int kFrontLeftThrottlePort = 12;
+    public static final int kFrontRightThrottlePort = 22;
+    public static final int kRearRightThrottlePort = 32;
+    public static final int kRearLeftThrottlePort = 42;
 
-    // IMU ID
-      public static final int kImuID = 0;
-    
+    public static final int kFrontLeftRotorPort = 11;
+    public static final int kFrontRightRotorPort = 21;
+    public static final int kRearRightRotorPort = 31;
+    public static final int kRearLeftRotorPort = 41;
+
+    public static final boolean kFrontLeftRotorReversed = false;
+    public static final boolean kRearLeftRotorReversed = false;
+    public static final boolean kFrontRightRotorReversed = false;
+    public static final boolean kRearRightRotorReversed = false;
+
+    public static final boolean kFrontLeftThrottleReversed = false;
+    public static final boolean kRearLeftThrottleReversed = false;
+    public static final boolean kFrontRightThrottleReversed = false;
+    public static final boolean kRearRightThrottleReversed = false;
+
+    public static final int kFrontLeftRotorEncoderPort = 1;
+    public static final int kFrontRightRotorEncoderPort = 2;
+    public static final int kRearRightRotorEncoderPort = 3;
+    public static final int kRearLeftRotorEncoderPort = 4;
+
     // Rotor Offset
-    public static final double kLeftFrontRotorOffset = 0.0;
-    public static final double kRightFrontRotorOffset = 0.0;
-    public static final double kLeftRearRotorOffset = 0.0;
-    public static final double kRightRearRotorOffset = 0.0;
+    public static final double kFrontLeftRotorEncoderOffsetRad = 134.121 * Math.PI / 180;
+    public static final double kRearLeftRotorEncoderOffsetRad = -41.309 * Math.PI / 180;
+    public static final double kFrontRightRotorEncoderOffsetRad = 85.078 * Math.PI / 180;
+    public static final double kRearRightRotorEncoderOffsetRad = 48.076 * Math.PI / 180;
 
-    // Rotor Inversion
-      public static final boolean kRotorEncoderDirection = false;
-      public static final boolean kRotorMotorInversion = false;
-
-    // Swerve Kinematics (order: left front, right front, left rear, right rear)
-      public static final SwerveDriveKinematics kSwerveKinematics = new SwerveDriveKinematics(
-        new Translation2d(0.0, 0.0), 
-        new Translation2d(0.0, 0.0), 
-        new Translation2d(0.0, 0.0),
-        new Translation2d(0.0, 0.0)
-    );
+    public static final double kTeleThrottleMaxAccerationUnitsPerSecond = 0;
+    public static final double kTeleThrottleMaxAngularAccerationUnitsPerSecond = 0;
+    public static final double kTeleThrottleMaxAngluarSpeedRadiansPerSecond = 0;
+    public static final double kTeleThrottleMaxSpeedMetersPerSecond = 0;
   }
-
-  public static class PIDConstants {
-    // Rotor PID constants
-      public static final double kRotor_kP = 0.0;
-      public static final double kRotor_kI = 0.0;
-      public static final double kRotor_kD = 0.0;
-  }
-
-  public static class DriveConstants {
-    // Max Speed / Acceleration
-      public static final double kMaxVelocityMetersPerSecond = 0.0;
-      public static final double kMaxAccelerationMetersPerSecond = 0.0;
-    
-    // Wheel Diameter
-      public static final double kWheelDiameterMeters = 0.0;
-
-    // Throttle Gear Ratio
-      public static final double kThrottleGearRatio = 0.0;
-
-    // Throttle Velocity Conversion Constant
-    public static final double kSparkThrottleVelocityConversionFactor = 1 / kThrottleGearRatio / 60 * kWheelDiameterMeters * Math.PI; // Spark Max (NEO)
-    public static final double kFalconThrottleVelocityConversionFactor = 1 / kThrottleGearRatio / 2048 * kWheelDiameterMeters * Math.PI * 10; // Talon FX ( Falcon 500 )
-  }  
 }

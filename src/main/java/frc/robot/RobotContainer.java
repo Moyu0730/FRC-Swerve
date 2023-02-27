@@ -5,12 +5,14 @@
 package frc.robot;
 
 import frc.robot.Constants.JoystickConstants;
-import frc.robot.commands.ManualDrive;
-import frc.robot.subsystems.Swerve;
+import frc.robot.commands.SwerveJoystickCommand;
+import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.SwerveModule;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -25,15 +27,22 @@ public class RobotContainer {
   private final Joystick m_OperatorJoystick = new Joystick(JoystickConstants.kOperatorControllerPort);
 
   // The robot's subsystems and commands are defined here...
-  private final Swerve m_Swerve = new Swerve();
-  private final ManualDrive m_ManualDriveCommand = new ManualDrive(m_Swerve, m_DriverJoystick);
+  private final SwerveSubsystem mSwerveSubsystem = new SwerveSubsystem();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    mSwerveSubsystem.setDefaultCommand( 
+      new SwerveJoystickCommand(
+        mSwerveSubsystem, 
+        () -> -m_DriverJoystick.getRawAxis(JoystickConstants.leftStick_X), 
+        () -> m_DriverJoystick.getRawAxis(JoystickConstants.leftStick_Y), 
+        () -> m_DriverJoystick.getRawAxis(JoystickConstants.rightStick_X),
+        () -> !m_DriverJoystick.getRawButton(JoystickConstants.btn_A)
+      )
+    );
+
     // Configure the trigger bindings
     configureBindings();
-
-    m_Swerve.setDefaultCommand(m_ManualDriveCommand);
   }
 
   /**
@@ -53,6 +62,9 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     // m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+
+    new JoystickButton(m_DriverJoystick, JoystickConstants.btn_B)
+      .onTrue( new RunCommand( () -> mSwerveSubsystem.zeroHeading(), mSwerveSubsystem));
   }
 
   /**

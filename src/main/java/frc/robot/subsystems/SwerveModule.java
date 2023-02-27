@@ -4,116 +4,121 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.AbsoluteSensorRange;
-import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.WPI_CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.MotorConstants;
-import frc.robot.Constants.PIDConstants;
+import frc.robot.library.PID;
+import frc.robot.Constants.ModuleConstants;
 
 public class SwerveModule extends SubsystemBase {
   // Initialize Rotor & Throttle Motor
-  private CANSparkMax mRotor;
-  private CANSparkMax mThrottle;
+  private final CANSparkMax m_Throttle;
+  private final CANSparkMax m_Rotor;
 
-  // Initialize Encoder
-  private WPI_CANCoder mThrottleEncoder;
-  private WPI_CANCoder mRotorEncoder;
+  // Initialize Throttle Encoder Position
+  // private final double m_ThrottleEncoderPosition;
 
   // Initialize Rotor PID Controller
-  private PIDController mRotorPID;
+  // private final PIDController mTurningPIDController;
+  private final PID mRotorPID;
+
+  // Initialize Rotor(Absolute) Encoders
+  private final WPI_CANCoder m_RotorEncoder;
+  private final double m_RotorEncoderOffsetRad;
 
   /** Creates a new ExampleSubsystem. */
   /**
    * 
-   * @param throttleID
-   * @param throttleEncoderID
-   * @param rotorID
-   * @param rotorEncoderID
-   * @param rotorOffsetAngelDeg
+   * @param ThrottleID
+   * @param RotorID
+   * @param ThrottleReversed
+   * @param RotorReversed
+   * @param RotorEncoderID (CANCoder)
+   * @param RotorEncoderOffset
+   * @param RotorEncoderReversed
    */
-  public SwerveModule( int throttleID, int throttleEncoderID, int rotorID, int rotorEncoderID, double rotorOffsetAngleDeg ) {
-    mRotor = new CANSparkMax(rotorID, MotorType.kBrushless);
-    mThrottle = new CANSparkMax(throttleID, MotorType.kBrushless);
-    
-    mRotorEncoder = new WPI_CANCoder(rotorEncoderID);
-    mThrottleEncoder = new WPI_CANCoder(throttleEncoderID);
+  public SwerveModule( int throttleID, int rotorID, boolean throttleReversed, boolean rotorReversed, int rotorEncoderID, double rotorEncoderOffset ) {
+    this.m_RotorEncoderOffsetRad = rotorEncoderOffset;
 
-    mThrottle.restoreFactoryDefaults();
-    mRotor.restoreFactoryDefaults();
-    mRotorEncoder.configFactoryDefault();
+    m_RotorEncoder = new WPI_CANCoder(rotorEncoderID);
 
-    mRotor.setInverted(MotorConstants.kRotorMotorInversion);
-    mRotor.enableVoltageCompensation(Constants.kVoltageCompensation);
-    mRotor.setIdleMode(IdleMode.kBrake);
+    m_Throttle = new CANSparkMax(throttleID, MotorType.kBrushless);
+    m_Rotor = new CANSparkMax(rotorID, MotorType.kBrushless);
 
-    mRotorEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180);
-    mRotorEncoder.configMagnetOffset(rotorOffsetAngleDeg);
-    mRotorEncoder.configSensorDirection(MotorConstants.kRotorEncoderDirection);
-    mRotorEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+    m_Throttle.setInverted(throttleReversed);
+    m_Rotor.setInverted(rotorReversed);
 
-    mRotorPID = new PIDController(
-      PIDConstants.kRotor_kP,
-      PIDConstants.kRotor_kI,
-      PIDConstants.kRotor_kD
-    );
+    m_Throttle.getEncoder().setPositionConversionFactor(ModuleConstants.kThrottleEncoderRot2Meter);
+    m_Throttle.getEncoder().setVelocityConversionFactor(ModuleConstants.kThrottleEncoderRPM2MeterPerSec);
+    // m_RotorEncoder.setPositionConversionFactor(ModuleConstants.kRotorEncoderRot2Rad);
+    // m_RotorEncoder.setVelocityConversionFactor(ModuleConstants.kRotorEncoderRPM2RadPerSec);
+    m_RotorEncoder.configFactoryDefault();
 
-    mRotorPID.enableContinuousInput(-180, 180);
+    // mTurningPIDController = new PIDController(ModuleConstants.kPTurning, 0, 0);
+    // mTurningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+    mRotorPID = new PID(ModuleConstants.kPTurning, 0, 0, 0);
+    mRotorPID.enableContinuousInput(-Math.PI, Math.PI);
 
-    mThrottle.enableVoltageCompensation(Constants.kVoltageCompensation);
-    mThrottle.setIdleMode(IdleMode.kBrake);
-
-    // mThrottleEncoder.setVelocityConversionFactor( DriveConstants.kSparkThrottleVelocityConversionFactor );
+    resetEncoders();
   }
 
-  /**
-     * Return current state of module
-     * 
-     * @return module state
-     */
-    public SwerveModuleState getState() {
-      return new SwerveModuleState(
-          mThrottleEncoder.getVelocity(),
-          Rotation2d.fromDegrees(mRotorEncoder.getAbsolutePosition())
-      );
+  public double getThrottleEncoderPosition() {
+    return m_Throttle.getEncoder().getPosition();
   }
 
-  /**
-   * Returns the current position of the module.
-   *
-   * @return The current position of the module.
-   */
-  public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition(
-        mRotorEncoder.getPosition(), new Rotation2d(mThrottleEncoder.getPosition()));
+  public double getRotorEncoderPosition() {
+    return m_RotorEncoder.getPosition();
   }
 
-  /**
-     * Set module state
-     * 
-     * @param state module state 
-     */
-    public void setState(SwerveModuleState state) {
-      // 優化狀態，使轉向馬達不必旋轉超過 90 度來獲得目標的角度
-      SwerveModuleState optimizedState = SwerveModuleState.optimize(state, getState().angle);
-      
-      // 通過比較目前角度與目標角度來用 PID 控制器計算轉向馬達所需的輸出
-      double rotorOutput = mRotorPID.calculate(getState().angle.getDegrees(), optimizedState.angle.getDegrees());
+  public double getThrottleEncoderVelocity() {
+    return m_Throttle.getEncoder().getVelocity();
+  }
 
-      mRotor.set(rotorOutput);
-      mThrottle.set(optimizedState.speedMetersPerSecond);
+  public double getRotorEncoderVelocity() {
+    return m_RotorEncoder.getVelocity();
+  }
+
+  public double getRotorEncoderRad() {
+    return m_RotorEncoder.getAbsolutePosition() * Math.PI / 180; // Angle
+    // return angle * ( m_RotorEncoderReversed ? -1 : 1 );
+  }
+
+  public void resetEncoders() {
+    m_Throttle.getEncoder().setPosition(0);
+    m_RotorEncoder.setPosition(getRotorEncoderRad());
+  }
+
+  public SwerveModuleState getState() {
+    return new SwerveModuleState(getThrottleEncoderVelocity(), new Rotation2d(getRotorEncoderPosition()));
+  }
+
+  public void setDesiredstate( SwerveModuleState state ){
+    if( Math.abs(state.speedMetersPerSecond) < 0.001 ){
+      stop();
+      return;
+    }
+
+    state = SwerveModuleState.optimize(state, getState().angle);
+    m_Throttle.set(state.speedMetersPerSecond / MotorConstants.kPhysicalMaxSpeedMetersPerSecond);
+    m_Rotor.set(mRotorPID.calculate(getRotorEncoderPosition(), state.angle.getRadians()));
+
+    SmartDashboard.putString("Swerve [" + m_RotorEncoder.getDeviceID() + "] State", state.toString());
+  }
+
+  public void stop(){
+    m_Throttle.set(0);
+    m_Rotor.set(0);
   }
 
   @Override
