@@ -7,8 +7,8 @@ public class PID {
     private double lastError = 0, m_iSum = 0;
     private double k_P, k_I, k_D, k_iLimit, m_Error, m_DeltaTime, m_prevTime, m_Time, m_DeltaError, m_prevError;
 
-    private boolean m_continuous;
-    private double m_minimumInput, m_maximumInput;
+    private boolean m_Continuous;
+    private double m_MinimumInput, m_MaximumInput;
 
     public double m_Output;
 
@@ -25,12 +25,10 @@ public class PID {
         m_Error = setPoint - ctrPos;
         m_DeltaError = ( m_prevError - m_Error ) / m_DeltaTime;
 
-        if (m_continuous) {
-            double errorBound = (m_maximumInput - m_minimumInput) / 2.0;
+        if (m_Continuous) {
+            double errorBound = (m_MaximumInput - m_MinimumInput) / 2.0;
             m_Error = MathUtil.inputModulus(setPoint - ctrPos, -errorBound, errorBound);
-          } else {
-            m_Error = setPoint - ctrPos;
-          }
+        } else m_Error = setPoint - ctrPos;
 
         if( m_Error < Math.abs(k_iLimit) ) m_iSum += m_Error;
         else m_iSum = 0;
@@ -42,8 +40,8 @@ public class PID {
     }
 
     public void enableContinuousInput(double minimumInput, double maximumInput) {
-        m_continuous = true;
-        m_minimumInput = minimumInput;
-        m_maximumInput = maximumInput;
+        m_Continuous = true;
+        m_MinimumInput = minimumInput;
+        m_MaximumInput = maximumInput;
     }
 }

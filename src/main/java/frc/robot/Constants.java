@@ -42,8 +42,8 @@ public final class Constants {
   public static final class ModuleConstants {
     // Adjust Here
       public static final double kWheelDiameterMeters = 0.1034;
-      public static final double kThrottleGearRatio = 2.6470588;
-      public static final double kRotorGearRatio = 150/7;
+      public static final double kThrottleGearRatio = 6.75 / 1.0; // 6.75 : 1.0
+      public static final double kRotorGearRatio = 150.0 / 7.0 / 1.0; // 12.8 : 1.0
       public static final double kThrottleEncoderRot2Meter = kThrottleGearRatio * Math.PI * kWheelDiameterMeters;
       public static final double kRotorEncoderRot2Rad = kRotorGearRatio * 2 * Math.PI;
       public static final double kThrottleEncoderRPM2MeterPerSec = kThrottleEncoderRot2Meter / 60;
@@ -52,8 +52,10 @@ public final class Constants {
   }
 
   public static class MotorConstants {
+    
     // Distance between right and left wheels
     public static final double kTrackWidthInMeter = 0.288798;
+    
     // Distance between front and back wheels
     public static final double kWheelBaseInMeter = 0.288798;
 
@@ -63,42 +65,50 @@ public final class Constants {
       new Translation2d( -kWheelBaseInMeter, -kTrackWidthInMeter ),
       new Translation2d( -kWheelBaseInMeter, kTrackWidthInMeter ));
 
-    public static final double kPhysicalMaxSpeedMetersPerSecond = 5;
-
+    // Throttle Port
     public static final int kFrontLeftThrottlePort = 12;
     public static final int kFrontRightThrottlePort = 22;
     public static final int kRearRightThrottlePort = 32;
     public static final int kRearLeftThrottlePort = 42;
 
+    // Rotor Port
     public static final int kFrontLeftRotorPort = 11;
     public static final int kFrontRightRotorPort = 21;
     public static final int kRearRightRotorPort = 31;
     public static final int kRearLeftRotorPort = 41;
 
+    // Rotor Inverted
     public static final boolean kFrontLeftRotorReversed = false;
     public static final boolean kRearLeftRotorReversed = false;
     public static final boolean kFrontRightRotorReversed = false;
     public static final boolean kRearRightRotorReversed = false;
 
+    // Throttle Inverted
     public static final boolean kFrontLeftThrottleReversed = false;
     public static final boolean kRearLeftThrottleReversed = false;
     public static final boolean kFrontRightThrottleReversed = false;
     public static final boolean kRearRightThrottleReversed = false;
 
+    // Rotor Encoder Port
     public static final int kFrontLeftRotorEncoderPort = 1;
     public static final int kFrontRightRotorEncoderPort = 2;
     public static final int kRearRightRotorEncoderPort = 3;
     public static final int kRearLeftRotorEncoderPort = 4;
 
-    // Rotor Offset
+    // Rotor Offset Rad
     public static final double kFrontLeftRotorEncoderOffsetRad = 134.121 * Math.PI / 180;
     public static final double kRearLeftRotorEncoderOffsetRad = -41.309 * Math.PI / 180;
     public static final double kFrontRightRotorEncoderOffsetRad = 85.078 * Math.PI / 180;
     public static final double kRearRightRotorEncoderOffsetRad = 48.076 * Math.PI / 180;
 
-    public static final double kTeleThrottleMaxAccerationUnitsPerSecond = 0;
-    public static final double kTeleThrottleMaxAngularAccerationUnitsPerSecond = 0;
-    public static final double kTeleThrottleMaxAngluarSpeedRadiansPerSecond = 0;
-    public static final double kTeleThrottleMaxSpeedMetersPerSecond = 0;
+    // Physical Max Speed and Acceleraiton (/PerSec)
+    public static final double kPhysicalMaxSpeedMetersPerSecond =  16 / 3.2808; // Meter = Feet / 3.2808
+    public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 2 * 2 * Math.PI;
+
+    // Teleop Max Speed and Acceleration
+    public static final double kTeleopThrottleMaxAccelerationUnitsPerSecond = 3;
+    public static final double kTeleopThrottleMaxAngularAccelerationUnitsPerSecond = 3;
+    public static final double kTeleopThrottleMaxAngluarSpeedRadiansPerSecond = kPhysicalMaxSpeedMetersPerSecond / 4;
+    public static final double kTeleopThrottleMaxSpeedMetersPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 4; 
   }
 }
